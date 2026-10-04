@@ -1,0 +1,140 @@
+@page
+@model ummyapp0027.Pages.BusBookingModel
+@{
+    ViewData["Title"] = "Book Bus Tickets";
+}
+
+<style>
+    .hero {
+        background: linear-gradient(135deg, #d32f2f, #b71c1c);
+        color: #fff;
+        padding: 60px 0 90px;
+        text-align: center;
+    }
+    .hero h1 { font-weight: 700; }
+    .search-card {
+        margin-top: -60px;
+        border: 0;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    }
+    .bus-card { border-radius: 12px; transition: box-shadow .2s; }
+    .bus-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+    .price { font-size: 1.4rem; font-weight: 700; color: #d32f2f; }
+    .rating { background: #2e7d32; color: #fff; border-radius: 6px; padding: 2px 8px; font-size: .85rem; }
+    .swap-btn { cursor: pointer; font-size: 1.4rem; user-select: none; }
+</style>
+
+<div class="hero">
+    <div class="container">
+        <h1>Book Bus Tickets Online</h1>
+        <p class="lead mb-0">Safe, easy and affordable travel across India</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card search-card p-4">
+        <form method="post">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label asp-for="From" class="form-label fw-semibold"></label>
+                    <select asp-for="From" id="fromCity" class="form-select form-select-lg">
+                        <option value="">Select city</option>
+                        @foreach (var c in ummyapp0027.Pages.BusBookingModel.Cities)
+                        {
+                            <option value="@c" selected="@(Model.From == c)">@c</option>
+                        }
+                    </select>
+                    <span asp-validation-for="From" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-auto text-center">
+                    <span class="swap-btn" id="swapCities" title="Swap cities">&#8644;</span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="To" class="form-label fw-semibold"></label>
+                    <select asp-for="To" id="toCity" class="form-select form-select-lg">
+                        <option value="">Select city</option>
+                        @foreach (var c in ummyapp0027.Pages.BusBookingModel.Cities)
+                        {
+                            <option value="@c" selected="@(Model.To == c)">@c</option>
+                        }
+                    </select>
+                    <span asp-validation-for="To" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-2">
+                    <label asp-for="TravelDate" class="form-label fw-semibold"></label>
+                    <input asp-for="TravelDate" type="date" class="form-control form-control-lg"
+                           min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="TravelDate" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-1">
+                    <label asp-for="Passengers" class="form-label fw-semibold">Pax</label>
+                    <input asp-for="Passengers" type="number" min="1" max="6" class="form-control form-control-lg" />
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-danger btn-lg">Search Buses</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @if (Model.Results != null)
+    {
+        <h4 class="mt-5 mb-3">
+            @Model.From &rarr; @Model.To
+            <small class="text-muted fs-6">on @Model.TravelDate?.ToString("dddd, dd MMM yyyy") &middot; @Model.Results.Count buses</small>
+        </h4>
+
+        @foreach (var bus in Model.Results)
+        {
+            <div class="card bus-card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h5 class="mb-1">@bus.Operator</h5>
+                            <div class="text-muted small">@bus.BusType</div>
+                            <span class="rating">&#9733; @bus.Rating.ToString("0.0")</span>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <strong>@bus.DepartureTime</strong>
+                            <span class="text-muted mx-2">&mdash; @bus.Duration &mdash;</span>
+                            <strong>@bus.ArrivalTime</strong>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <div class="small @(bus.SeatsAvailable <= 10 ? "text-danger" : "text-success")">
+                                @bus.SeatsAvailable seats left
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <div class="price">&#8377;@bus.Price.ToString("N0")</div>
+                            <a class="btn btn-outline-danger btn-sm mt-1"
+                               asp-page="BusBooking"
+                               asp-page-handler="SelectSeats"
+                               asp-route-busId="@bus.Id"
+                               asp-route-from="@Model.From"
+                               asp-route-to="@Model.To"
+                               asp-route-date="@Model.TravelDate?.ToString("yyyy-MM-dd")"
+                               asp-route-passengers="@Model.Passengers">View Seats</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('swapCities').addEventListener('click', function () {
+            const from = document.getElementById('fromCity');
+            const to = document.getElementById('toCity');
+            [from.value, to.value] = [to.value, from.value];
+        });
+    </script>
+}
